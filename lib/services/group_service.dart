@@ -3,6 +3,7 @@ import '../models/group_model.dart';
 import '../models/user_model.dart';
 import '../models/invitation_model.dart';
 import '../models/group_message.dart';
+import '../models/private_message.dart';
 
 class GroupService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -228,5 +229,85 @@ class GroupService {
       .map((snapshot) => snapshot.docs
         .map((doc) => GroupMessage.fromMap(doc.data()))
         .toList());
+  }
+
+  // Get or create a private chatId for two users
+  Future<String> getOrCreatePrivateChatId(String userId1, String userId2) async {
+    final firestore = FirebaseFirestore.instance;
+    final sortedIds = [userId1, userId2]..sort();
+    final chatId = sortedIds.join('_');
+    final chatDoc = firestore.collection('private_chats').doc(chatId);
+    final doc = await chatDoc.get();
+    if (!doc.exists) {
+      await chatDoc.set({'userIds': sortedIds});
+    }
+    return chatId;
+  }
+
+  // Send a private message
+  Future<void> sendPrivateMessage({
+    required String chatId,
+    required String senderId,
+    required String receiverId,
+    required String text,
+    String? type,
+  }) async {
+    final firestore = FirebaseFirestore.instance;
+    final docRef = firestore.collection('private_chats').doc(chatId).collection('messages').doc();
+    final message = PrivateMessage(
+      id: docRef.id,
+      chatId: chatId,
+      senderId: senderId,
+      receiverId: receiverId,
+      text: text,
+      timestamp: DateTime.now(),
+      type: type,
+    );
+    await docRef.set(message.toMap());
+  }
+
+  // Stream private messages
+  Stream<List<PrivateMessage>> streamPrivateMessages(String chatId) {
+    final firestore = FirebaseFirestore.instance;
+    return firestore
+      .collection('private_chats')
+      .doc(chatId)
+      .collection('messages')
+      .orderBy('timestamp', descending: false)
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+        .map((doc) => PrivateMessage.fromMap(doc.data()))
+        .toList());
+  }
+
+  // Get recent private chats for a user
+  Stream<List<Map<String, dynamic>>> getRecentPrivateChats(String userId) {
+    final firestore = FirebaseFirestore.instance;
+    return firestore
+      .collection('private_chats')
+      .where('userIds', arrayContains: userId)
+      .snapshots()
+      .asyncMap((snapshot) async {
+        final chats = <Map<String, dynamic>>[];
+        for (final doc in snapshot.docs) {
+          final chatId = doc.id;
+          final messagesSnap = await firestore
+              .collection('private_chats')
+              .doc(chatId)
+              .collection('messages')
+              .orderBy('timestamp', descending: true)
+              .limit(1)
+              .get();
+          final lastMessage = messagesSnap.docs.isNotEmpty
+              ? PrivateMessage.fromMap(messagesSnap.docs.first.data())
+              : null;
+          chats.add({
+            'chatId': chatId,
+            'userIds': doc['userIds'],
+            'lastMessage': lastMessage,
+          });
+        }
+        return chats;
+      });
   }
 } 
