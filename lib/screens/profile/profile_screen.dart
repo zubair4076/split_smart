@@ -5,6 +5,9 @@ import '../../models/group_model.dart';
 import '../../services/group_service.dart';
 import '../group/group_create_screen.dart';
 import '../group/group_detail_screen.dart';
+import '../invitations/invitations_screen.dart';
+import 'package:provider/provider.dart';
+import '../../main.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -259,12 +262,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: _navigateToCreateGroup,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create Group'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _navigateToCreateGroup,
+                        icon: const Icon(Icons.group_add),
+                        label: const Text('Create Group'),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const InvitationsScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.mail_outline),
+                        label: const Text('Invitations'),
+                      ),
+                    ],
                   ),
                 ],
+              ),
+              const SizedBox(height: 24),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 32),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Theme Mode', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Builder(
+                        builder: (context) {
+                          final themeNotifier = context.watch<ThemeModeNotifier>();
+                          return DropdownButton<ThemeMode>(
+                            value: themeNotifier.themeMode,
+                            items: const [
+                              DropdownMenuItem(
+                                value: ThemeMode.system,
+                                child: Text('System Default'),
+                              ),
+                              DropdownMenuItem(
+                                value: ThemeMode.light,
+                                child: Text('Light'),
+                              ),
+                              DropdownMenuItem(
+                                value: ThemeMode.dark,
+                                child: Text('Dark'),
+                              ),
+                            ],
+                            onChanged: (mode) {
+                              if (mode != null) {
+                                themeNotifier.setThemeMode(mode);
+                              }
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 8),
               if (_groups.isEmpty)

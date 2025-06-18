@@ -69,7 +69,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           break;
         }
       }
-      // If not already in group, try to add
       if (userToAdd == null) {
         // Try to find user in Firestore by email or username
         final firestore = FirebaseFirestore.instance;
@@ -100,11 +99,19 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         });
         return;
       }
-      await groupService.addMemberToGroup(_group.id, userToAdd.id);
-      await _loadMembers();
+      // Send invitation instead of adding directly
+      final currentUser = authService.currentUser;
+      await groupService.sendGroupInvitation(
+        groupId: _group.id,
+        groupName: _group.name,
+        invitedUserId: userToAdd.id,
+        invitedUserEmail: userToAdd.email,
+        inviterUserId: currentUser!.uid,
+        inviterUserName: currentUser.email ?? '',
+      );
       _inviteController.clear();
       setState(() {
-        _error = null;
+        _error = 'Invitation sent!';
         _isLoading = false;
       });
     } catch (e) {

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/group_model.dart';
 import '../models/user_model.dart';
+import '../models/invitation_model.dart';
 
 class GroupService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -152,5 +153,43 @@ class GroupService {
     } catch (e) {
       rethrow;
     }
+  }
+
+  // Send group invitation
+  Future<void> sendGroupInvitation({
+    required String groupId,
+    required String groupName,
+    required String invitedUserId,
+    required String invitedUserEmail,
+    required String inviterUserId,
+    required String inviterUserName,
+  }) async {
+    await _firestore.collection('invitations').add({
+      'groupId': groupId,
+      'groupName': groupName,
+      'invitedUserId': invitedUserId,
+      'invitedUserEmail': invitedUserEmail,
+      'inviterUserId': inviterUserId,
+      'inviterUserName': inviterUserName,
+      'status': 'pending',
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Get invitations for a user (pending only)
+  Stream<List<InvitationModel>> getUserInvitations(String userId) {
+    return _firestore
+        .collection('invitations')
+        .where('invitedUserId', isEqualTo: userId)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => InvitationModel.fromMap({...doc.data(), 'id': doc.id}))
+            .toList());
+  }
+
+  // Update invitation status
+  Future<void> updateInvitationStatus(String invitationId, String status) async {
+    await _firestore.collection('invitations').doc(invitationId).update({'status': status});
   }
 } 
