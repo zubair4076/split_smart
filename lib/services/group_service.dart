@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/group_model.dart';
 import '../models/user_model.dart';
 import '../models/invitation_model.dart';
+import '../models/group_message.dart';
 
 class GroupService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -191,5 +192,41 @@ class GroupService {
   // Update invitation status
   Future<void> updateInvitationStatus(String invitationId, String status) async {
     await _firestore.collection('invitations').doc(invitationId).update({'status': status});
+  }
+
+  // Send a message to group chat
+  Future<void> sendGroupMessage({
+    required String groupId,
+    required String senderId,
+    required String senderName,
+    required String text,
+    String? type,
+  }) async {
+    final firestore = FirebaseFirestore.instance;
+    final docRef = firestore.collection('groups').doc(groupId).collection('chats').doc();
+    final message = GroupMessage(
+      id: docRef.id,
+      groupId: groupId,
+      senderId: senderId,
+      senderName: senderName,
+      text: text,
+      timestamp: DateTime.now(),
+      type: type,
+    );
+    await docRef.set(message.toMap());
+  }
+
+  // Stream group chat messages
+  Stream<List<GroupMessage>> streamGroupMessages(String groupId) {
+    final firestore = FirebaseFirestore.instance;
+    return firestore
+      .collection('groups')
+      .doc(groupId)
+      .collection('chats')
+      .orderBy('timestamp', descending: false)
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+        .map((doc) => GroupMessage.fromMap(doc.data()))
+        .toList());
   }
 } 
