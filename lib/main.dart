@@ -278,40 +278,40 @@ class _CrudScreenState extends State<CrudScreen> {
                 return const Center(child: Text('No items yet'));
               }
 
-              return ListView.builder(
+                return ListView.builder(
                 itemCount: snapshot.data!.docs.length,
-                itemBuilder: (context, index) {
+                  itemBuilder: (context, index) {
                   final doc = snapshot.data!.docs[index];
                   final data = doc.data() as Map<String, dynamic>;
-                  return ListTile(
+                    return ListTile(
                     title: Text(data['text'] ?? ''),
                     subtitle: Text(
                       data['timestamp'] != null
                           ? 'Added: ${(data['timestamp'] as Timestamp).toDate()}'
                           : 'No timestamp',
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () => _updateItem(doc.id, data['text'] ?? ''),
-                        ),
-                        IconButton(
+                          ),
+                          IconButton(
                           icon: const Icon(Icons.delete),
                           onPressed: () => _deleteItem(doc.id),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
             },
           ),
         ),
       ],
     ),
-  );
+    );
 
   @override
   void dispose() {
