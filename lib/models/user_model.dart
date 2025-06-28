@@ -7,6 +7,7 @@ class UserModel {
   final List<String> groupIds;
   final DateTime createdAt;
   final DateTime lastLogin;
+  final String? photoUrl;
 
   UserModel({
     required this.id,
@@ -15,6 +16,7 @@ class UserModel {
     required this.groupIds,
     required this.createdAt,
     required this.lastLogin,
+    this.photoUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +27,7 @@ class UserModel {
       'groupIds': groupIds,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastLogin': Timestamp.fromDate(lastLogin),
+      'photoUrl': photoUrl,
     };
   }
 
@@ -36,6 +39,7 @@ class UserModel {
       groupIds: List<String>.from(map['groupIds'] ?? []),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       lastLogin: (map['lastLogin'] as Timestamp).toDate(),
+      photoUrl: map['photoUrl'],
     );
   }
 
@@ -46,6 +50,7 @@ class UserModel {
     List<String>? groupIds,
     DateTime? createdAt,
     DateTime? lastLogin,
+    String? photoUrl,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -54,6 +59,7 @@ class UserModel {
       groupIds: groupIds ?? this.groupIds,
       createdAt: createdAt ?? this.createdAt,
       lastLogin: lastLogin ?? this.lastLogin,
+      photoUrl: photoUrl ?? this.photoUrl,
     );
   }
 } 
